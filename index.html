@@ -158,18 +158,24 @@ section { padding-block: clamp(70px, 10vw, 130px); }
 .sec-head p { color: var(--muted); margin: 16px 0 0; font-size: 18px; max-width: 42ch; }
 .tag-sec { font-family: var(--mono); font-size: 12px; color: var(--muted); letter-spacing: .04em; margin-bottom: 14px; }
 
-/* Funciones */
-.features { display: grid; grid-template-columns: 1fr; gap: 0; border-top: 1px solid var(--line); }
-.feat { display: grid; grid-template-columns: 1fr; gap: 6px; padding: 26px 0; border-bottom: 1px solid var(--line); position: relative; }
-@media (min-width: 820px) { .feat { grid-template-columns: 0.9fr 1.1fr; gap: 40px; align-items: baseline; } }
-.feat .fname { font-family: var(--display); font-weight: 300; font-size: clamp(25px, 3vw, 40px); line-height: 1.08; letter-spacing: -.015em; transition: transform .4s cubic-bezier(.2,.7,.2,1); }
-.feat .fdesc { color: var(--muted); font-size: 16.5px; max-width: 44ch; }
-.feat .soon { display: inline-block; font-family: var(--mono); font-size: 10.5px; color: var(--blue); background: var(--blue-soft); border-radius: 6px; padding: 2px 7px; margin-left: 10px; vertical-align: 3px; }
-@media (hover:hover){ .feat:hover .fname { transform: translateX(10px); } }
-.feat .thumb { display: none; border-radius: 12px; overflow: hidden; margin-top: 10px; }
-@media (hover: none) { .feat .thumb { display: block; } }
-.cursor-plate { position: fixed; left: 0; top: 0; width: 270px; pointer-events: none; z-index: 8; opacity: 0; transform: translate(-50%,-50%); border-radius: 14px; overflow: hidden; box-shadow: var(--shadow); }
-.cursor-plate img { aspect-ratio: 4/5; object-fit: cover; }
+/* Funciones — filas editoriales con foto alternada */
+.features { display: flex; flex-direction: column; gap: clamp(46px, 7vw, 96px); }
+.feat { display: grid; grid-template-columns: 1fr; gap: 20px; align-items: center; }
+@media (min-width: 820px) { .feat { grid-template-columns: 1fr 1fr; gap: min(7vw, 76px); } .feat:nth-child(even) .fmedia { order: 2; } }
+.fmedia { border-radius: 20px; overflow: hidden; aspect-ratio: 4 / 3; background: var(--surface); box-shadow: var(--shadow); }
+.fmedia img { width: 100%; height: 100%; object-fit: cover; transition: transform .7s cubic-bezier(.2,.7,.2,1); }
+.feat:hover .fmedia img { transform: scale(1.04); }
+.feat .fname { font-family: var(--display); font-weight: 300; font-size: clamp(27px, 3.4vw, 44px); line-height: 1.05; letter-spacing: -.02em; }
+.feat .fdesc { color: var(--muted); font-size: 17px; max-width: 42ch; margin-top: 14px; }
+.feat .soon { display: inline-block; font-family: var(--mono); font-size: 10.5px; color: var(--blue); background: var(--blue-soft); border-radius: 6px; padding: 2px 7px; margin-left: 10px; vertical-align: 4px; }
+
+/* Banda atmosférica + foto de Nosotros */
+.band { margin-top: clamp(44px, 6vw, 80px); border-radius: 22px; overflow: hidden; aspect-ratio: 21 / 9; box-shadow: var(--shadow); }
+.band img { width: 100%; height: 100%; object-fit: cover; }
+.about-row { display: grid; grid-template-columns: 1fr; gap: 28px; align-items: center; margin-top: 44px; }
+@media (min-width: 820px) { .about-row { grid-template-columns: 1fr 1.2fr; gap: min(6vw, 64px); } }
+.about-row .m { border-radius: 20px; overflow: hidden; aspect-ratio: 4 / 5; box-shadow: var(--shadow); margin: 0; }
+.about-row .m img { width: 100%; height: 100%; object-fit: cover; }
 
 /* Ficha técnica */
 .spec { display: grid; grid-template-columns: 1fr; gap: 0; margin-top: 54px; }
@@ -314,21 +320,33 @@ footer { padding-block: clamp(50px,8vw,90px) 30px; border-top: 1px solid var(--l
       <p>Historia clínica, odontograma, presupuestos y turnos. Funciona en el navegador de la PC o la tablet; no hay que instalar nada.</p>
     </div>
     <div class="features" id="featList">
-      <div class="feat" data-img="img/espejo.jpg">
-        <div class="fname">Historia clínica por voz</div>
-        <div class="fdesc">Dictás desde la PC o la tablet del consultorio. Cada evolución queda firmada con fecha y profesional, y no se puede alterar.</div>
+      <div class="feat">
+        <div class="fmedia"><img src="img/espejo.jpg" width="1400" height="1050" loading="lazy" alt="Examen bucal con espejo y explorador."></div>
+        <div class="ftext">
+          <div class="fname">Historia clínica por voz</div>
+          <div class="fdesc">Dictás desde la PC o la tablet del consultorio. Cada evolución queda firmada con fecha y profesional, y no se puede alterar.</div>
+        </div>
       </div>
-      <div class="feat" data-img="img/radiografia.jpg">
-        <div class="fname">Odontograma</div>
-        <div class="fdesc">Permanentes y temporales, cinco caras por pieza, con el historial de cada marca y el estado a realizar o existente.</div>
+      <div class="feat">
+        <div class="fmedia"><img src="img/radiografia.jpg" width="1400" height="933" loading="lazy" alt="Odontólogo revisando radiografías en un negatoscopio."></div>
+        <div class="ftext">
+          <div class="fname">Odontograma</div>
+          <div class="fdesc">Permanentes y temporales, cinco caras por pieza, con el historial de cada marca y el estado a realizar o existente.</div>
+        </div>
       </div>
-      <div class="feat" data-img="img/equipo.jpg">
-        <div class="fname">Plan y presupuesto <span class="soon">pronto</span></div>
-        <div class="fdesc">Lo que marcás como a realizar arma el plan de tratamiento, y el paciente recibe el presupuesto con los valores de su obra social.</div>
+      <div class="feat">
+        <div class="fmedia"><img src="img/equipo.jpg" width="1100" height="1650" loading="lazy" alt="Dos odontólogos atendiendo a un paciente."></div>
+        <div class="ftext">
+          <div class="fname">Plan y presupuesto <span class="soon">pronto</span></div>
+          <div class="fdesc">Lo que marcás como a realizar arma el plan de tratamiento, y el paciente recibe el presupuesto con los valores de su obra social.</div>
+        </div>
       </div>
-      <div class="feat" data-img="img/consultorio-2.jpg">
-        <div class="fname">Turnos y recordatorios <span class="soon">pronto</span></div>
-        <div class="fdesc">Agenda por profesional y sillón. Recordatorios de turno por SMS, para que falten menos pacientes.</div>
+      <div class="feat">
+        <div class="fmedia"><img src="img/consultorio-2.jpg" width="1400" height="933" loading="lazy" alt="Consultorio con sillón odontológico y lámpara."></div>
+        <div class="ftext">
+          <div class="fname">Turnos y recordatorios <span class="soon">pronto</span></div>
+          <div class="fdesc">Agenda por profesional y sillón. Recordatorios de turno por SMS, para que falten menos pacientes.</div>
+        </div>
       </div>
     </div>
 
@@ -338,6 +356,7 @@ footer { padding-block: clamp(50px,8vw,90px) 30px; border-top: 1px solid var(--l
       <div class="row"><dt>Dictado</dt><dd>Con el micrófono del consultorio, dentro de Spee.</dd></div>
       <div class="row"><dt>Recordatorios</dt><dd>Por SMS, solo turnos. La historia clínica nunca sale del sistema.</dd></div>
     </div>
+    <figure class="band"><img src="img/consultorio.jpg" width="2000" height="1333" loading="lazy" alt="Consultorio odontológico blanco con sillón, unidad y monitor."></figure>
   </section>
 
   <!-- ============ PRECIOS ============ -->
@@ -413,7 +432,10 @@ footer { padding-block: clamp(50px,8vw,90px) 30px; border-top: 1px solid var(--l
         <text class="big" x="70" y="232">Sección sagital, arcada inferior. Canino a segundo molar.</text>
       </svg>
     </div>
-    <p class="about rise"><strong>Spee es un producto de efcloud</strong>, el equipo detrás de GymHero, TurnosPro y PlayCrew. Hacemos software para negocios argentinos, en Argentina.</p>
+    <div class="about-row rise">
+      <figure class="m"><img src="img/instrumental.jpg" width="1000" height="1500" loading="lazy" alt="Mano con guante sosteniendo instrumental odontológico."></figure>
+      <p class="about"><strong>Spee es un producto de efcloud</strong>, el equipo detrás de GymHero, TurnosPro y PlayCrew. Hacemos software para negocios argentinos, en Argentina.</p>
+    </div>
   </section>
 
   <!-- ============ CONTACTO ============ -->
@@ -448,8 +470,6 @@ footer { padding-block: clamp(50px,8vw,90px) 30px; border-top: 1px solid var(--l
     <p style="color:var(--muted);font-size:12.5px;margin:18px 0 0">Fotografías: Kari Bjorn, Katarzyna Zygnerska, Jonathan Borba y Caroline LM, vía Unsplash.</p>
   </div>
 </footer>
-
-<div class="cursor-plate" id="cursorPlate" aria-hidden="true"><img alt="" src="img/espejo.jpg"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
@@ -616,20 +636,6 @@ footer { padding-block: clamp(50px,8vw,90px) 30px; border-top: 1px solid var(--l
 
     addEventListener('load', () => ScrollTrigger.refresh());
     document.fonts && document.fonts.ready.then(() => ScrollTrigger.refresh());
-  }
-
-  /* ---------- Imagen que sigue al cursor (Funciones) ---------- */
-  if (motion && matchMedia('(hover: hover) and (pointer: fine)').matches) {
-    const plate = document.getElementById('cursorPlate'), pimg = plate.querySelector('img');
-    const qx = gsap.quickTo(plate, 'x', { duration: .5, ease: 'power3' }), qy = gsap.quickTo(plate, 'y', { duration: .5, ease: 'power3' });
-    const list = document.getElementById('featList');
-    let raf = 0, mx = 0, my = 0;
-    list.addEventListener('pointermove', e => { mx = e.clientX; my = e.clientY; if (!raf) raf = requestAnimationFrame(() => { qx(mx + 150); qy(my); raf = 0; }); });
-    list.querySelectorAll('.feat').forEach(li => li.addEventListener('pointerenter', () => {
-      pimg.src = li.dataset.img; gsap.to(plate, { opacity: 1, duration: .3 });
-      gsap.fromTo(pimg, { scale: 1.15 }, { scale: 1, duration: .8, ease: 'expo.out' });
-    }));
-    list.addEventListener('pointerleave', () => gsap.to(plate, { opacity: 0, duration: .25 }));
   }
 })();
 </script>
