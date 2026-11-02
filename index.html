@@ -1,0 +1,637 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Spee</title>
+<meta name="description" content="Spee: software para consultorios odontológicos. Dictás la consulta y el odontograma se dibuja solo.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..600;1,9..144,300..500&family=Inter+Tight:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap">
+<style>
+/* Spee — "lo decís y queda dibujado". El momento fuerte es el odontograma que se pinta al dictar;
+   todo lo demás, en calma. Tinta azul-clínica sobre blanco frío; rojo "a realizar" y azul "existente"
+   son la convención odontológica real, acá usados como el acento de marca. */
+:root {
+  --paper: #fbfcfe;
+  --ink: #0e1b2e;
+  --muted: #566475;
+  --line: #e0e7ef;
+  --surface: #eef3f9;
+  --surface-2: #e6edf6;
+  --red: #e02b26;      /* a realizar */
+  --red-soft: #fbe3e1;
+  --blue: #2f63f6;     /* existente */
+  --blue-soft: #e2ebfe;
+  --shadow: 18px 30px 60px -32px rgba(14,27,46,.30);
+  --display: "Fraunces", Georgia, "Times New Roman", serif;
+  --ui: "Inter Tight", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "Geist Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --gx: clamp(20px, 5vw, 76px);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #0a1320; --ink: #e9f0f8; --muted: #93a4b8; --line: #1d2a3b;
+    --surface: #101d2e; --surface-2: #142338;
+    --red: #ff675c; --red-soft: #2a1715; --blue: #6f97ff; --blue-soft: #15223d;
+    --shadow: 18px 30px 60px -30px rgba(0,0,0,.6); color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #0a1320; --ink: #e9f0f8; --muted: #93a4b8; --line: #1d2a3b;
+  --surface: #101d2e; --surface-2: #142338;
+  --red: #ff675c; --red-soft: #2a1715; --blue: #6f97ff; --blue-soft: #15223d;
+  --shadow: 18px 30px 60px -30px rgba(0,0,0,.6); color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0; background: var(--paper); color: var(--ink);
+  font-family: var(--ui); font-size: 17px; line-height: 1.55; font-weight: 400;
+  -webkit-font-smoothing: antialiased; overflow-x: hidden;
+}
+.lenis.lenis-smooth { scroll-behavior: auto !important; }
+a { color: inherit; text-decoration: none; }
+img { display: block; width: 100%; height: auto; }
+:focus-visible { outline: 2px solid var(--blue); outline-offset: 3px; border-radius: 2px; }
+.wrap { width: 100%; max-width: 1240px; margin-inline: auto; padding-inline: var(--gx); }
+.eq { font-variant-numeric: tabular-nums; }
+
+/* ---------- Header ---------- */
+header {
+  position: sticky; top: 0; z-index: 20;
+  background: color-mix(in srgb, var(--paper) 82%, transparent);
+  backdrop-filter: saturate(1.1) blur(12px);
+  border-bottom: 1px solid transparent; transition: border-color .3s;
+}
+header.stuck { border-color: var(--line); }
+.bar { display: flex; align-items: center; justify-content: space-between; gap: 24px; height: 68px; }
+.brand { display: inline-flex; align-items: center; gap: 10px; font-family: var(--display); font-weight: 500; font-size: 23px; letter-spacing: -.02em; }
+.brand .arc { width: 26px; height: 15px; overflow: visible; }
+.brand .arc path { fill: none; stroke: var(--ink); stroke-width: 1.6; stroke-linecap: round; }
+nav.main { display: none; gap: 30px; font-size: 15.5px; color: var(--muted); }
+nav.main a { position: relative; padding: 4px 0; transition: color .2s; }
+nav.main a:hover { color: var(--ink); }
+nav.main a::after { content: ""; position: absolute; left: 0; right: 100%; bottom: -2px; height: 1.5px; background: var(--ink); transition: right .3s; }
+nav.main a:hover::after { right: 0; }
+@media (min-width: 880px) { nav.main { display: flex; } }
+.btn {
+  display: inline-flex; align-items: center; gap: 8px; font-weight: 500; font-size: 15.5px;
+  padding: 11px 20px; border-radius: 999px; background: var(--ink); color: var(--paper);
+  border: 1px solid var(--ink); transition: transform .2s, box-shadow .2s, background .2s;
+}
+.btn:hover { transform: translateY(-1px); box-shadow: 0 10px 24px -12px color-mix(in srgb, var(--ink) 70%, transparent); }
+.btn.ghost { background: transparent; color: var(--ink); }
+.btn.ghost:hover { background: var(--surface); }
+.btn.blue { background: var(--blue); border-color: var(--blue); color: #fff; }
+
+/* ---------- Hero ---------- */
+.hero { padding-top: clamp(40px, 7vw, 86px); padding-bottom: clamp(30px, 5vw, 60px); }
+.kicker { display: inline-flex; align-items: center; gap: 10px; color: var(--muted); font-size: 14.5px; margin-bottom: 22px; }
+.kicker .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--red); box-shadow: 0 0 0 4px var(--red-soft); }
+h1 {
+  font-family: var(--display); font-weight: 300; font-optical-sizing: auto;
+  font-size: clamp(40px, 7.4vw, 92px); line-height: .98; letter-spacing: -.025em;
+  margin: 0; max-width: 15ch; text-wrap: balance;
+}
+h1 em { font-style: italic; font-weight: 400; }
+.sub { margin: 26px 0 0; max-width: 46ch; font-size: clamp(17px, 2vw, 20px); color: var(--muted); }
+.hero-cta { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 32px; align-items: center; }
+.hero-cta .fine { font-size: 14px; color: var(--muted); }
+
+/* ---------- Demo (odontograma vivo) ---------- */
+.stage { margin-top: clamp(38px, 5vw, 60px); display: grid; gap: 20px; grid-template-columns: 1fr; }
+@media (min-width: 1000px) { .stage { grid-template-columns: 1.55fr 1fr; align-items: stretch; } }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 22px; }
+.chart-card { padding: clamp(18px, 2.4vw, 30px); box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 16px; }
+.chart-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.chart-head .t { font-family: var(--display); font-size: 20px; font-weight: 400; letter-spacing: -.01em; }
+.legend { display: flex; gap: 18px; font-size: 13px; color: var(--muted); }
+.legend span { display: inline-flex; align-items: center; gap: 7px; }
+.legend i { width: 11px; height: 11px; border-radius: 3px; }
+.legend .r i { background: var(--red); } .legend .b i { background: var(--blue); }
+.chart-scroll { overflow-x: auto; margin-inline: -4px; padding: 4px; }
+svg.odonto { display: block; width: 100%; min-width: 560px; height: auto; }
+svg.odonto .face { fill: var(--paper); stroke: color-mix(in srgb, var(--ink) 55%, transparent); stroke-width: .9; transition: fill .5s ease; }
+svg.odonto .face.r { fill: var(--red); stroke: var(--red); }
+svg.odonto .face.b { fill: var(--blue); stroke: var(--blue); }
+svg.odonto .num { font-family: var(--mono); font-size: 10px; fill: var(--muted); text-anchor: middle; transition: fill .3s; }
+svg.odonto .tooth.hit .num { fill: var(--ink); font-weight: 500; }
+svg.odonto .x { stroke: var(--blue); stroke-width: 2; opacity: 0; transition: opacity .4s; stroke-linecap: round; }
+svg.odonto .tooth.absent .x { opacity: 1; }
+svg.odonto .mid { stroke: var(--line); stroke-width: 1; }
+
+.side { display: flex; flex-direction: column; gap: 14px; }
+.transcript { background: var(--ink); color: var(--paper); border-radius: 18px; padding: 18px 20px; min-height: 120px; }
+.transcript .state { display: flex; align-items: center; gap: 10px; font-size: 12.5px; color: color-mix(in srgb, var(--paper) 62%, transparent); margin-bottom: 12px; }
+.bars { display: inline-flex; gap: 2px; align-items: flex-end; height: 13px; }
+.bars i { width: 2.5px; height: 3px; background: color-mix(in srgb, var(--paper) 55%, transparent); border-radius: 2px; display: block; }
+.listening .bars i { background: #ff7b72; animation: bar .9s ease-in-out infinite; }
+.listening .bars i:nth-child(2){animation-delay:.1s}.listening .bars i:nth-child(3){animation-delay:.25s}
+.listening .bars i:nth-child(4){animation-delay:.4s}.listening .bars i:nth-child(5){animation-delay:.15s}
+@keyframes bar { 0%,100%{height:3px} 50%{height:13px} }
+.transcript .spoken { font-family: var(--display); font-size: 20px; line-height: 1.32; font-weight: 300; }
+.caret { display: inline-block; width: 2px; height: 20px; background: var(--paper); vertical-align: -3px; margin-left: 1px; animation: blink 1s steps(1) infinite; }
+@keyframes blink { 50% { opacity: 0 } }
+.chips { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 12px; }
+.chip { font-family: var(--mono); font-size: 11.5px; padding: 4px 9px; border-radius: 7px; background: color-mix(in srgb, var(--paper) 12%, transparent); color: color-mix(in srgb, var(--paper) 86%, transparent); }
+.chip.r { background: color-mix(in srgb, var(--red) 24%, transparent); }
+.chip.b { background: color-mix(in srgb, var(--blue) 30%, transparent); }
+.phrases { display: flex; flex-direction: column; gap: 8px; }
+.phrase {
+  all: unset; cursor: pointer; display: flex; align-items: center; gap: 12px;
+  padding: 13px 15px; border-radius: 13px; background: var(--paper); border: 1px solid var(--line);
+  font-size: 15px; color: var(--ink); transition: border-color .2s, transform .2s, background .2s;
+}
+.phrase:hover { border-color: color-mix(in srgb, var(--ink) 35%, transparent); transform: translateX(3px); }
+.phrase .k { width: 22px; height: 22px; flex: none; display: grid; place-items: center; border-radius: 7px; background: var(--surface-2); font-family: var(--mono); font-size: 11px; color: var(--muted); transition: background .2s, color .2s; }
+.phrase[aria-pressed="true"] { color: var(--muted); background: var(--surface); }
+.phrase[aria-pressed="true"] .k { background: var(--blue); color: #fff; }
+.reset { all: unset; cursor: pointer; align-self: flex-start; font-size: 13.5px; color: var(--muted); border-bottom: 1px solid var(--line); padding-bottom: 1px; }
+.reset:hover { color: var(--ink); }
+
+/* ---------- Bandas / secciones ---------- */
+section { padding-block: clamp(70px, 10vw, 130px); }
+.sec-head { max-width: 30ch; margin-bottom: clamp(36px, 5vw, 60px); }
+.sec-head h2 { font-family: var(--display); font-weight: 300; font-size: clamp(30px, 4.4vw, 56px); line-height: 1.05; letter-spacing: -.02em; margin: 0; text-wrap: balance; }
+.sec-head p { color: var(--muted); margin: 16px 0 0; font-size: 18px; max-width: 42ch; }
+.tag-sec { font-family: var(--mono); font-size: 12px; color: var(--muted); letter-spacing: .04em; margin-bottom: 14px; }
+
+/* Funciones */
+.features { display: grid; grid-template-columns: 1fr; gap: 0; border-top: 1px solid var(--line); }
+.feat { display: grid; grid-template-columns: 1fr; gap: 6px; padding: 26px 0; border-bottom: 1px solid var(--line); position: relative; }
+@media (min-width: 820px) { .feat { grid-template-columns: 0.9fr 1.1fr; gap: 40px; align-items: baseline; } }
+.feat .fname { font-family: var(--display); font-weight: 300; font-size: clamp(25px, 3vw, 40px); line-height: 1.08; letter-spacing: -.015em; transition: transform .4s cubic-bezier(.2,.7,.2,1); }
+.feat .fdesc { color: var(--muted); font-size: 16.5px; max-width: 44ch; }
+.feat .soon { display: inline-block; font-family: var(--mono); font-size: 10.5px; color: var(--blue); background: var(--blue-soft); border-radius: 6px; padding: 2px 7px; margin-left: 10px; vertical-align: 3px; }
+@media (hover:hover){ .feat:hover .fname { transform: translateX(10px); } }
+.feat .thumb { display: none; border-radius: 12px; overflow: hidden; margin-top: 10px; }
+@media (hover: none) { .feat .thumb { display: block; } }
+.cursor-plate { position: fixed; left: 0; top: 0; width: 270px; pointer-events: none; z-index: 8; opacity: 0; transform: translate(-50%,-50%); border-radius: 14px; overflow: hidden; box-shadow: var(--shadow); }
+.cursor-plate img { aspect-ratio: 4/5; object-fit: cover; }
+
+/* Ficha técnica */
+.spec { display: grid; grid-template-columns: 1fr; gap: 0; margin-top: 54px; }
+.spec .row { display: grid; grid-template-columns: 1fr; gap: 4px; padding: 16px 0; border-top: 1px solid var(--line); }
+@media (min-width: 720px) { .spec .row { grid-template-columns: 220px 1fr; gap: 30px; align-items: baseline; } }
+.spec dt { font-size: 15px; color: var(--muted); }
+.spec dd { margin: 0; font-size: 16.5px; }
+
+/* Precios */
+.plans { display: grid; grid-template-columns: 1fr; gap: 18px; }
+@media (min-width: 900px) { .plans { grid-template-columns: repeat(3, 1fr); } }
+.plan { background: var(--surface); border: 1px solid var(--line); border-radius: 20px; padding: 28px 26px 26px; display: flex; flex-direction: column; gap: 18px; }
+.plan.featured { background: var(--ink); color: var(--paper); border-color: var(--ink); box-shadow: var(--shadow); }
+.plan .pn { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 15px; }
+.plan .pn .flag { font-size: 12.5px; color: var(--blue); display: inline-flex; align-items: center; gap: 6px; }
+.plan.featured .pn .flag { color: #9fbbff; }
+.plan .pn .flag::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.plan .price { font-family: var(--display); font-weight: 300; font-size: clamp(42px, 4.4vw, 60px); line-height: 1; letter-spacing: -.02em; }
+.plan .per { font-size: 13.5px; color: var(--muted); margin-top: -10px; }
+.plan.featured .per { color: color-mix(in srgb, var(--paper) 60%, transparent); }
+.plan ul { list-style: none; margin: 4px 0 0; padding: 0; display: flex; flex-direction: column; gap: 11px; font-size: 15.5px; }
+.plan li { display: flex; gap: 10px; align-items: flex-start; }
+.plan li::before { content: ""; width: 16px; height: 16px; flex: none; margin-top: 3px; border-radius: 5px; background: var(--blue-soft) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M2.5 6.2l2.2 2.2L9.5 3.6' fill='none' stroke='%232f63f6' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/12px no-repeat; }
+.plan.featured li::before { background-color: rgba(255,255,255,.14); }
+.plan li.off { color: var(--muted); }
+.plan li.off::before { background: var(--surface-2); }
+.plan .go { margin-top: auto; }
+.plan .go .btn { width: 100%; justify-content: center; }
+.plan:not(.featured) .go .btn { background: transparent; color: var(--ink); border-color: var(--line); }
+.plan:not(.featured) .go .btn:hover { border-color: var(--ink); background: transparent; }
+.price-note { margin-top: 22px; font-size: 14px; color: var(--muted); }
+
+/* FAQ */
+.faq { margin-top: 56px; max-width: 760px; }
+.faq details { border-top: 1px solid var(--line); }
+.faq details:last-child { border-bottom: 1px solid var(--line); }
+.faq summary { cursor: pointer; list-style: none; padding: 20px 0; font-family: var(--display); font-weight: 400; font-size: clamp(19px,2.2vw,24px); display: flex; justify-content: space-between; gap: 16px; }
+.faq summary::-webkit-details-marker { display: none; }
+.faq summary .pm { color: var(--muted); transition: transform .3s; font-family: var(--ui); }
+.faq details[open] summary .pm { transform: rotate(45deg); }
+.faq p { margin: 0 0 20px; color: var(--muted); max-width: 60ch; }
+
+/* Por qué Spee */
+.curve { margin-top: 10px; border: 1px solid var(--line); border-radius: 22px; background: var(--surface); padding: clamp(18px,3vw,40px); overflow-x: auto; }
+.curve svg { display: block; width: 100%; min-width: 580px; height: auto; }
+.curve .ref { stroke: var(--line); stroke-width: 1; stroke-dasharray: 3 4; }
+.curve .occ { fill: none; stroke: var(--ink); stroke-width: 1.4; stroke-linecap: round; }
+.curve .cusp { fill: var(--paper); stroke: var(--ink); stroke-width: 1.2; }
+.curve .dim { stroke: var(--muted); stroke-width: .8; }
+.curve text { font-family: var(--mono); font-size: 10.5px; fill: var(--muted); }
+.curve .big { font-family: var(--display); font-size: 15px; font-style: italic; fill: var(--ink); }
+.about { margin-top: 44px; max-width: 54ch; font-size: 19px; }
+.about strong { font-weight: 500; }
+
+/* Contacto */
+.contact-grid { display: grid; grid-template-columns: 1fr; gap: 10px; }
+@media (min-width: 760px) { .contact-grid { grid-template-columns: 1fr 1fr; gap: 10px 26px; } }
+.field { display: flex; flex-direction: column; gap: 6px; border-bottom: 1.5px solid var(--line); padding: 14px 0 10px; transition: border-color .25s; }
+.field:focus-within { border-color: var(--ink); }
+.field label { font-size: 13px; color: var(--muted); }
+.field input { all: unset; font-family: var(--display); font-weight: 300; font-size: 23px; color: var(--ink); width: 100%; }
+.field input::placeholder { color: color-mix(in srgb, var(--muted) 55%, transparent); }
+.field.full { grid-column: 1/-1; }
+.send { grid-column: 1/-1; display: flex; flex-wrap: wrap; gap: 18px; align-items: center; margin-top: 28px; }
+.send .note { font-size: 13.5px; color: var(--muted); max-width: 40ch; }
+.okmsg { grid-column: 1/-1; margin-top: 14px; font-size: 14.5px; color: var(--ink); }
+
+/* Footer */
+footer { padding-block: clamp(50px,8vw,90px) 30px; border-top: 1px solid var(--line); margin-top: clamp(40px,6vw,80px); }
+.foot-top { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 20px; color: var(--muted); font-size: 14px; }
+.foot-nav { display: flex; gap: 22px; flex-wrap: wrap; }
+.foot-nav a:hover { color: var(--ink); }
+.giant { font-family: var(--display); font-weight: 300; letter-spacing: -.05em; line-height: .8; font-size: clamp(90px, 26vw, 420px); margin-top: 6vh; color: var(--ink); }
+.giant .arc2 { display: inline-block; }
+
+.rise > * { will-change: transform, opacity; }
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+</style>
+</head>
+<body>
+
+<header id="hdr">
+  <div class="wrap bar">
+    <a class="brand" href="#inicio" aria-label="Spee, inicio">
+      <svg class="arc" viewBox="0 0 26 15" aria-hidden="true"><path d="M1 4 C 8 4, 11 13, 17 13 S 25 5, 25 2"></path></svg>
+      Spee
+    </a>
+    <nav class="main" aria-label="Secciones">
+      <a href="#funciones">Funciones</a>
+      <a href="#precios">Precios</a>
+      <a href="#porque">Por qué Spee</a>
+      <a href="#contacto">Contacto</a>
+    </nav>
+    <a class="btn" href="#precios">Probar gratis</a>
+  </div>
+</header>
+
+<!-- ============ HERO + DEMO ============ -->
+<main id="inicio">
+  <div class="wrap hero">
+    <span class="kicker"><span class="dot"></span>Software para consultorios odontológicos</span>
+    <h1 class="rise">Dictás la consulta. El odontograma se <em>dibuja solo</em>.</h1>
+    <p class="sub rise">Decís la pieza, la cara y lo que encontraste; queda marcado en la ficha y firmado con tu matrícula. Sin soltar el instrumental, sin tocar el teclado.</p>
+    <div class="hero-cta rise">
+      <a class="btn blue" href="#precios">Probar gratis</a>
+      <a class="btn ghost" href="#demo">Ver cómo funciona</a>
+      <span class="fine">Gratis para siempre · sin tarjeta</span>
+    </div>
+
+    <div class="stage" id="demo">
+      <div class="panel chart-card">
+        <div class="chart-head">
+          <span class="t">Odontograma</span>
+          <span class="legend"><span class="r"><i></i>A realizar</span><span class="b"><i></i>Existente</span></span>
+        </div>
+        <div class="chart-scroll">
+          <svg class="odonto" id="odonto" viewBox="0 0 860 300" role="img" aria-label="Odontograma FDI de piezas permanentes, paciente de ejemplo."></svg>
+        </div>
+      </div>
+      <div class="side">
+        <div class="transcript" id="transcript" aria-live="polite">
+          <div class="state"><span class="bars" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span><span id="stateText">En espera · paciente de ejemplo</span></div>
+          <div class="spoken" id="spoken">«16 y 26, restauraciones oclusales, existentes.»</div>
+          <div class="chips" id="chips"><span class="chip b">16 · O · existente</span><span class="chip b">26 · O · existente</span></div>
+        </div>
+        <div class="phrases" role="group" aria-label="Frases para dictar">
+          <button class="phrase" type="button" data-i="0" aria-pressed="false"><span class="k">a</span><span>«Pieza 36, caries oclusal, a realizar.»</span></button>
+          <button class="phrase" type="button" data-i="1" aria-pressed="false"><span class="k">b</span><span>«46, resina mesial y oclusal, existente.»</span></button>
+          <button class="phrase" type="button" data-i="2" aria-pressed="false"><span class="k">c</span><span>«Once, fractura incisal, a realizar.»</span></button>
+          <button class="phrase" type="button" data-i="3" aria-pressed="false"><span class="k">d</span><span>«Pieza 18 ausente.»</span></button>
+        </div>
+        <button class="reset" type="button" id="reset">Volver a empezar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ FUNCIONES ============ -->
+  <section id="funciones" class="wrap">
+    <div class="sec-head rise">
+      <div class="tag-sec">Lo que hace</div>
+      <h2>Toda la consulta, desde que habla el profesional.</h2>
+      <p>Historia clínica, odontograma, presupuestos y turnos. Funciona en el navegador de la PC o la tablet; no hay que instalar nada.</p>
+    </div>
+    <div class="features" id="featList">
+      <div class="feat" data-img="img/espejo.jpg">
+        <div class="fname">Historia clínica por voz</div>
+        <div class="fdesc">Dictás desde la PC o la tablet del consultorio. Cada evolución queda firmada con fecha y profesional, y no se puede alterar.</div>
+      </div>
+      <div class="feat" data-img="img/radiografia.jpg">
+        <div class="fname">Odontograma</div>
+        <div class="fdesc">Permanentes y temporales, cinco caras por pieza, con el historial de cada marca y el estado a realizar o existente.</div>
+      </div>
+      <div class="feat" data-img="img/equipo.jpg">
+        <div class="fname">Plan y presupuesto <span class="soon">pronto</span></div>
+        <div class="fdesc">Lo que marcás como a realizar arma el plan de tratamiento, y el paciente recibe el presupuesto con los valores de su obra social.</div>
+      </div>
+      <div class="feat" data-img="img/consultorio-2.jpg">
+        <div class="fname">Turnos y recordatorios <span class="soon">pronto</span></div>
+        <div class="fdesc">Agenda por profesional y sillón. Recordatorios de turno por SMS, para que falten menos pacientes.</div>
+      </div>
+    </div>
+
+    <div class="spec">
+      <div class="row"><dt>Notación</dt><dd>FDI (ISO 3950), como se dicta.</dd></div>
+      <div class="row"><dt>Colores</dt><dd>Rojo a realizar, azul existente. La convención clínica de siempre.</dd></div>
+      <div class="row"><dt>Dictado</dt><dd>Con el micrófono del consultorio, dentro de Spee.</dd></div>
+      <div class="row"><dt>Recordatorios</dt><dd>Por SMS, solo turnos. La historia clínica nunca sale del sistema.</dd></div>
+    </div>
+  </section>
+
+  <!-- ============ PRECIOS ============ -->
+  <section id="precios" class="wrap">
+    <div class="sec-head rise">
+      <div class="tag-sec">Precios</div>
+      <h2>Por mes, en pesos. Sin contrato.</h2>
+      <p>Empezás gratis y cambiás de plan o das de baja cuando quieras.</p>
+    </div>
+    <div class="plans">
+      <div class="plan">
+        <div class="pn"><span>Gratis</span></div>
+        <div class="price">$0</div>
+        <div class="per">para siempre</div>
+        <ul>
+          <li>1 profesional</li>
+          <li>Odontograma e historia clínica</li>
+          <li>Agenda de turnos</li>
+          <li class="off">Dictado por voz</li>
+        </ul>
+        <div class="go"><a class="btn" href="#contacto">Crear cuenta</a></div>
+      </div>
+      <div class="plan featured">
+        <div class="pn"><span>Profesional</span><span class="flag">El más elegido</span></div>
+        <div class="price">$45.000</div>
+        <div class="per">por mes</div>
+        <ul>
+          <li>1 profesional</li>
+          <li>Dictado por voz</li>
+          <li>Plan de tratamiento y presupuesto</li>
+          <li>Recordatorios por SMS</li>
+        </ul>
+        <div class="go"><a class="btn blue" href="#contacto">Probar sin tarjeta</a></div>
+      </div>
+      <div class="plan">
+        <div class="pn"><span>Consultorio</span></div>
+        <div class="price">$90.000</div>
+        <div class="per">por mes</div>
+        <ul>
+          <li>Hasta 5 profesionales</li>
+          <li>Todo lo de Profesional</li>
+          <li>Agenda por sillón</li>
+          <li>Permisos para asistentes</li>
+        </ul>
+        <div class="go"><a class="btn" href="#contacto">Hablar con nosotros</a></div>
+      </div>
+    </div>
+
+    <div class="faq">
+      <details><summary>¿Tengo que instalar algo?<span class="pm">+</span></summary><p>No. Spee funciona en el navegador de la PC o la tablet del consultorio.</p></details>
+      <details><summary>¿Dónde quedan los datos de mis pacientes?<span class="pm">+</span></summary><p>En Spee, con acceso solo para tu equipo. Lo único que sale son los recordatorios de turno por SMS; la historia clínica nunca sale del sistema.</p></details>
+      <details><summary>¿Puedo cambiar de plan?<span class="pm">+</span></summary><p>Sí, cuando quieras. El cambio se aplica desde el mes siguiente.</p></details>
+    </div>
+  </section>
+
+  <!-- ============ POR QUÉ SPEE ============ -->
+  <section id="porque" class="wrap">
+    <div class="sec-head rise">
+      <div class="tag-sec">El nombre</div>
+      <h2>Por qué Spee.</h2>
+      <p>Por la curva de Spee: la que forman las cúspides de premolares y molares vistas de perfil. La describió Ferdinand Graf von Spee en 1890.</p>
+    </div>
+    <div class="curve" aria-hidden="true">
+      <svg viewBox="0 0 1000 260" id="curveSvg">
+        <line class="ref" x1="40" y1="70" x2="960" y2="70"></line>
+        <path class="occ" id="occPath" d="M70 70 C 260 70, 380 168, 560 168 S 840 110, 950 64"></path>
+        <g id="cusps"></g>
+        <line class="dim" x1="560" y1="70" x2="560" y2="168"></line>
+        <line class="dim" x1="552" y1="70" x2="568" y2="70"></line>
+        <line class="dim" x1="552" y1="168" x2="568" y2="168"></line>
+        <text x="576" y="124">profundidad de la curva</text>
+        <text x="40" y="58">plano de referencia</text>
+        <text class="big" x="70" y="232">Sección sagital, arcada inferior. Canino a segundo molar.</text>
+      </svg>
+    </div>
+    <p class="about rise"><strong>Spee es un producto de efcloud</strong>, el equipo detrás de GymHero, TurnosPro y PlayCrew. Hacemos software para negocios argentinos, en Argentina.</p>
+  </section>
+
+  <!-- ============ CONTACTO ============ -->
+  <section id="contacto" class="wrap">
+    <div class="sec-head rise">
+      <div class="tag-sec">Contacto</div>
+      <h2>Pedí una demo.</h2>
+      <p>Dejanos tus datos y te escribimos por WhatsApp para coordinar.</p>
+    </div>
+    <form class="contact-grid" id="join" novalidate>
+      <div class="field"><label for="f-nombre">Nombre y apellido</label><input id="f-nombre" name="nombre" autocomplete="name" placeholder="Dra. Laura Méndez" required></div>
+      <div class="field"><label for="f-consultorio">Consultorio</label><input id="f-consultorio" name="consultorio" autocomplete="organization" placeholder="Consultorio Méndez" required></div>
+      <div class="field full"><label for="f-wa">WhatsApp</label><input id="f-wa" name="whatsapp" inputmode="tel" autocomplete="tel" placeholder="+54 9 341 000 0000" required></div>
+      <div class="send">
+        <button class="btn blue" type="submit">Pedir demo</button>
+        <span class="note">Te escribimos una sola vez para coordinar.</span>
+      </div>
+      <p class="okmsg" id="ok" hidden></p>
+    </form>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="foot-top">
+      <span>Spee — software para consultorios odontológicos. Un producto de efcloud, Argentina.</span>
+      <nav class="foot-nav" aria-label="Pie">
+        <a href="#funciones">Funciones</a><a href="#precios">Precios</a><a href="#porque">Por qué Spee</a><a href="#contacto">Contacto</a>
+      </nav>
+    </div>
+    <div class="giant" aria-hidden="true">Spee</div>
+    <p style="color:var(--muted);font-size:12.5px;margin:18px 0 0">Fotografías: Kari Bjorn, Katarzyna Zygnerska, Jonathan Borba y Caroline LM, vía Unsplash.</p>
+  </div>
+</footer>
+
+<div class="cursor-plate" id="cursorPlate" aria-hidden="true"><img alt="" src="img/espejo.jpg"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/lenis@1.1.13/dist/lenis.min.js"></script>
+<script>
+(() => {
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const motion = !!window.gsap && !reduce;
+  const NS = 'http://www.w3.org/2000/svg';
+  const el = (t, a = {}, p) => { const n = document.createElementNS(NS, t); for (const k in a) n.setAttribute(k, a[k]); if (p) p.appendChild(n); return n; };
+
+  /* ---------- Odontograma ---------- */
+  const svg = document.getElementById('odonto');
+  const S = 40, I = 16, GAP = 10, X0 = 20;
+  const rows = [
+    { y: 34, q: [[18,17,16,15,14,13,12,11], [21,22,23,24,25,26,27,28]], upper: true },
+    { y: 200, q: [[48,47,46,45,44,43,42,41], [31,32,33,34,35,36,37,38]], upper: false }
+  ];
+  const teeth = {};
+  el('line', { class: 'mid', x1: 430, y1: 6, x2: 430, y2: 294 }, svg);
+  el('line', { class: 'mid', x1: 10, y1: 150, x2: 850, y2: 150 }, svg);
+  rows.forEach(row => row.q.forEach((list, side) => list.forEach((n, i) => {
+    const x = side === 0 ? X0 + i * (S + GAP) : 445 + i * (S + GAP);
+    const y = row.y, a = (S - I) / 2, g = el('g', { class: 'tooth' }, svg);
+    const P = (pts) => pts.map(p => p.join(',')).join(' ');
+    const top = P([[x,y],[x+S,y],[x+S-a,y+a],[x+a,y+a]]);
+    const bot = P([[x,y+S],[x+S,y+S],[x+S-a,y+S-a],[x+a,y+S-a]]);
+    const lef = P([[x,y],[x+a,y+a],[x+a,y+S-a],[x,y+S]]);
+    const rig = P([[x+S,y],[x+S-a,y+a],[x+S-a,y+S-a],[x+S,y+S]]);
+    const quad = Math.floor(n / 10);
+    const map = { V: row.upper ? top : bot, LP: row.upper ? bot : top, M: (quad === 1 || quad === 4) ? rig : lef, D: (quad === 1 || quad === 4) ? lef : rig };
+    const faces = {};
+    for (const k in map) faces[k] = el('polygon', { class: 'face', points: map[k] }, g);
+    faces.O = el('rect', { class: 'face', x: x + a, y: y + a, width: I, height: I, rx: 1.5 }, g);
+    el('line', { class: 'x', x1: x - 3, y1: y - 3, x2: x + S + 3, y2: y + S + 3 }, g);
+    el('line', { class: 'x', x1: x + S + 3, y1: y - 3, x2: x - 3, y2: y + S + 3 }, g);
+    el('text', { class: 'num', x: x + S / 2, y: row.upper ? y + S + 18 : y - 9 }, g).textContent = n;
+    teeth[n] = { g, faces };
+  })));
+
+  const mark = (n, faces, cls) => {
+    const t = teeth[n]; t.g.classList.add('hit');
+    if (faces === 'absent') { t.g.classList.add('absent'); return; }
+    faces.forEach(f => t.faces[f].classList.add(cls));
+  };
+  const SAMPLE = () => { mark(16, ['O'], 'b'); mark(26, ['O'], 'b'); };
+  const clearAll = () => Object.values(teeth).forEach(t => { t.g.classList.remove('hit', 'absent'); Object.values(t.faces).forEach(f => f.classList.remove('r', 'b')); });
+  SAMPLE();
+
+  const PHRASES = [
+    { text: 'Pieza 36, caries oclusal, a realizar.', ops: [[36, ['O'], 'r']], chips: [['36 · O · a realizar', 'r']] },
+    { text: '46, resina mesial y oclusal, existente.', ops: [[46, ['M', 'O'], 'b']], chips: [['46 · M O · existente', 'b']] },
+    { text: 'Once, fractura incisal, a realizar.', ops: [[11, ['O'], 'r']], chips: [['11 · I · a realizar', 'r']] },
+    { text: 'Pieza 18 ausente.', ops: [[18, 'absent']], chips: [['18 · ausente', 'b']] }
+  ];
+  const transcript = document.getElementById('transcript'), spoken = document.getElementById('spoken');
+  const chips = document.getElementById('chips'), stateText = document.getElementById('stateText');
+  const buttons = [...document.querySelectorAll('.phrase')];
+  const SAMPLE_SPOKEN = spoken.textContent, SAMPLE_CHIPS = chips.innerHTML;
+  let busy = Promise.resolve(), firstRun = true, autoDone = false;
+  const wait = (ms) => new Promise(r => setTimeout(r, reduce ? 0 : ms));
+
+  const dictate = (i) => busy = busy.then(async () => {
+    if (buttons[i].getAttribute('aria-pressed') === 'true') return;
+    const p = PHRASES[i];
+    if (firstRun) { chips.innerHTML = ''; firstRun = false; }
+    transcript.classList.add('listening'); stateText.textContent = 'Escuchando…';
+    spoken.textContent = '«'; const caret = document.createElement('span'); caret.className = 'caret';
+    const txt = document.createTextNode(''); spoken.append(txt, caret);
+    for (const ch of p.text) { txt.data += ch; await wait(26); }
+    caret.remove(); spoken.append('»');
+    transcript.classList.remove('listening'); stateText.textContent = 'Entendido · marcado en el odontograma';
+    p.chips.forEach(([t, c]) => { const s = document.createElement('span'); s.className = 'chip ' + c; s.textContent = t; chips.prepend(s); });
+    p.ops.forEach(o => mark(...o));
+    if (motion) p.ops.forEach(([n]) => gsap.fromTo(teeth[n].g, { scale: 1.2, transformOrigin: '50% 50%' }, { scale: 1, duration: .6, ease: 'expo.out' }));
+    buttons[i].setAttribute('aria-pressed', 'true');
+    await wait(260);
+  });
+  buttons.forEach(b => b.addEventListener('click', () => dictate(+b.dataset.i)));
+  document.getElementById('reset').addEventListener('click', () => busy = busy.then(() => {
+    clearAll(); SAMPLE(); buttons.forEach(b => b.setAttribute('aria-pressed', 'false')); firstRun = true;
+    spoken.textContent = SAMPLE_SPOKEN; chips.innerHTML = SAMPLE_CHIPS; stateText.textContent = 'En espera · paciente de ejemplo';
+  }));
+
+  /* ---------- Curva de Spee ---------- */
+  const occ = document.getElementById('occPath'), cg = document.getElementById('cusps');
+  const OL = occ.getTotalLength();
+  ['33', '34', '35', '36', '37'].forEach((lab, k) => {
+    const pt = occ.getPointAtLength(OL * [0.12, 0.3, 0.46, 0.64, 0.84][k]);
+    el('circle', { class: 'cusp', cx: pt.x, cy: pt.y, r: 5 }, cg);
+    el('line', { class: 'dim', x1: pt.x, y1: pt.y + 9, x2: pt.x, y2: pt.y + 26 }, cg);
+    el('text', { x: pt.x - 7, y: pt.y + 40 }, cg).textContent = lab;
+  });
+
+  /* ---------- Formulario (vista previa) ---------- */
+  const form = document.getElementById('join'), ok = document.getElementById('ok');
+  form.addEventListener('submit', e => {
+    e.preventDefault();
+    const missing = [...form.querySelectorAll('[required]')].filter(i => !i.value.trim());
+    ok.hidden = false;
+    if (missing.length) { ok.textContent = 'Falta completar: ' + missing.map(i => i.previousElementSibling.textContent.toLowerCase()).join(', ') + '.'; missing[0].focus(); return; }
+    ok.textContent = 'Vista previa: el formulario todavía no está conectado, así que no se envió nada.';
+  });
+
+  /* ---------- Header: borde al scrollear ---------- */
+  const hdr = document.getElementById('hdr');
+  const onScroll = () => hdr.classList.toggle('stuck', window.scrollY > 10);
+  onScroll(); addEventListener('scroll', onScroll, { passive: true });
+
+  /* ---------- Movimiento ---------- */
+  let lenis = null;
+  if (motion) {
+    gsap.registerPlugin(ScrollTrigger);
+    if (window.Lenis) {
+      lenis = new Lenis({ lerp: 0.1 });
+      lenis.on('scroll', ScrollTrigger.update);
+      gsap.ticker.add(t => lenis.raf(t * 1000));
+      gsap.ticker.lagSmoothing(0);
+    }
+    // navegación suave
+    document.querySelectorAll('a[href^="#"]').forEach(a => a.addEventListener('click', e => {
+      const id = a.getAttribute('href'); if (id.length < 2) return;
+      const t = document.querySelector(id); if (!t) return;
+      e.preventDefault(); lenis ? lenis.scrollTo(t, { offset: -70 }) : t.scrollIntoView({ behavior: 'smooth' });
+    }));
+
+    // Entrada del héroe: titular palabra por palabra + panel, y auto-dictado del primer caso.
+    const h1 = document.querySelector('h1');
+    h1.setAttribute('aria-label', h1.textContent);
+    const frag = document.createDocumentFragment();
+    const rebuild = (node, into) => [...node.childNodes].forEach(c => {
+      if (c.nodeType === 3) c.data.split(/(\s+)/).forEach(w => {
+        if (!w) return; if (/^\s+$/.test(w)) { into.append(w); return; }
+        const s = document.createElement('span'); s.className = 'w'; s.style.display = 'inline-block'; s.setAttribute('aria-hidden','true'); s.textContent = w; into.append(s);
+      });
+      else { const clone = c.cloneNode(false); clone.setAttribute('aria-hidden','true'); into.append(clone); rebuild(c, clone); }
+    });
+    rebuild(h1, frag); h1.textContent = ''; h1.append(frag);
+
+    gsap.timeline({ defaults: { ease: 'expo.out' } })
+      .from('h1 .w', { yPercent: 115, opacity: 0, duration: 1.1, stagger: .04 }, .1)
+      .from('.hero .sub', { y: 18, opacity: 0, duration: .9 }, '-=.7')
+      .from('.hero-cta', { y: 16, opacity: 0, duration: .8 }, '-=.6')
+      .from('.stage', { y: 40, opacity: 0, duration: 1.1 }, '-=.6');
+
+    ScrollTrigger.create({ trigger: '#demo', start: 'top 72%', once: true, onEnter: () => { if (!autoDone) { autoDone = true; setTimeout(() => dictate(0), 500); } } });
+
+    // Encabezados de sección: una subida sobria (solo el bloque de título).
+    document.querySelectorAll('.rise').forEach(r => {
+      gsap.from(r, { y: 28, opacity: 0, duration: .9, ease: 'expo.out', scrollTrigger: { trigger: r, start: 'top 85%', once: true } });
+    });
+
+    // Filas de funciones: aparecen escalonadas.
+    gsap.from('.feat', { y: 22, opacity: 0, duration: .8, stagger: .08, ease: 'expo.out', scrollTrigger: { trigger: '#featList', start: 'top 80%', once: true } });
+
+    // Precios.
+    gsap.from('.plan', { y: 24, opacity: 0, duration: .85, stagger: .1, ease: 'expo.out', scrollTrigger: { trigger: '.plans', start: 'top 82%', once: true } });
+
+    // Curva de Spee: se dibuja al entrar.
+    gsap.set(occ, { strokeDasharray: OL, strokeDashoffset: OL });
+    gsap.timeline({ scrollTrigger: { trigger: '#curveSvg', start: 'top 78%', once: true } })
+      .to(occ, { strokeDashoffset: 0, duration: 2, ease: 'power2.inOut' })
+      .from('#cusps > *', { opacity: 0, duration: .4, stagger: .05 }, '-=.9');
+
+    addEventListener('load', () => ScrollTrigger.refresh());
+    document.fonts && document.fonts.ready.then(() => ScrollTrigger.refresh());
+  }
+
+  /* ---------- Imagen que sigue al cursor (Funciones) ---------- */
+  if (motion && matchMedia('(hover: hover) and (pointer: fine)').matches) {
+    const plate = document.getElementById('cursorPlate'), pimg = plate.querySelector('img');
+    const qx = gsap.quickTo(plate, 'x', { duration: .5, ease: 'power3' }), qy = gsap.quickTo(plate, 'y', { duration: .5, ease: 'power3' });
+    const list = document.getElementById('featList');
+    let raf = 0, mx = 0, my = 0;
+    list.addEventListener('pointermove', e => { mx = e.clientX; my = e.clientY; if (!raf) raf = requestAnimationFrame(() => { qx(mx + 150); qy(my); raf = 0; }); });
+    list.querySelectorAll('.feat').forEach(li => li.addEventListener('pointerenter', () => {
+      pimg.src = li.dataset.img; gsap.to(plate, { opacity: 1, duration: .3 });
+      gsap.fromTo(pimg, { scale: 1.15 }, { scale: 1, duration: .8, ease: 'expo.out' });
+    }));
+    list.addEventListener('pointerleave', () => gsap.to(plate, { opacity: 0, duration: .25 }));
+  }
+})();
+</script>
+</body>
+</html>
